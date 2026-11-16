@@ -426,3 +426,17 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# --- Custom rules for Graphics Renderer ---
+# Игнорируем папку сборки CMake
+build/
+
+# Разрешаем папку с 3D-моделями и сами .obj файлы
+!obj/
+!*.obj
+
+# Игнорируем тестовые рендеры, кроме финального для README (если нужно)
+points.png
+lines.png
+model.png
+*.tga
