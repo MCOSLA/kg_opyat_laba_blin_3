@@ -1,35 +1,34 @@
-#include <lib.hpp>
 #include <iostream>
+#include <lib.hpp>
+#include <limits>
 
+int main(int argc, char** argv) {
+  if (argc <= 1) {
+    std::cerr << "Usage: model <path.obj> [texture.png|tga]\n";
+    return 1;
+  }
+  const int W = 1024, H = 1024;
+  Image<glm::vec3> color(W, H, glm::vec3(0.0f));
+  Image<float> depth(W, H, std::numeric_limits<float>::infinity());
 
-int main(int argc, char** argv)
-{
-    if (argc <= 1)
-    {
-        std::cerr << "Path to the model expected as the first argument!\n";
-        const char* execPath = argc > 0 && argv[0] && argv[0][0] ? argv[0] : "model";
-        std::cerr << "Usage: " << execPath << " <path.obj>" << std::endl;
-        return 1;
-    }
-    const char* path = argv[1];
-    std::cout << "Model path: " << path << std::endl;
+  auto tris = loadObj(argv[1]);
+  if (tris.empty()) return 1;
 
-    Image img(2048, 2048, glm::vec3(0.0f));
-    auto tris = loadObj(path);
-    if (tris.empty())
-        return 1;
+  Texture tex;
+  bool hasTex = argc > 2 && tex.load(argv[2]);
 
-    for (auto& tri: tris)
-    {
-        drawWireframeTriangle(
-            glm::vec2(tri.v[0].x, tri.v[0].y) * 0.3f + 0.5f,
-            glm::vec2(tri.v[1].x, tri.v[1].y) * 0.3f + 0.5f,
-            glm::vec2(tri.v[2].x, tri.v[2].y) * 0.3f + 0.5f,
-            glm::vec3(1.0f), img);
-    }
+  Camera cam;
+  cam.position = glm::vec3(0.0f, 0.0f, 3.5f);
+  cam.aspect = float(W) / float(H);
 
-    writeImg(img, "model.png");
+  Uniforms u;
+  u.model = glm::mat4(1.0f);
+  u.view = cam.view();
+  u.proj = cam.projection();
+  u.cameraPos = cam.position;
+  u.texture = hasTex ? &tex : nullptr;
 
-    return 0;
+  renderMesh(tris, u, color, depth);
+  writeImg(color, "model.png");
+  return 0;
 }
-
